@@ -10,10 +10,10 @@ script populates.
 Policies classified by this script:
   - DLP-Tenant-Base       : tenant-wide baseline (stub created by OTAP script).
   - DLP-Default-Strict    : strict policy for the default environment (created here).
-  - DLP-PP-DEV            : permissive, allows developer connectors (stub by OTAP).
-  - DLP-PP-TEST           : standard, same as tenant base (stub by OTAP).
-  - DLP-PP-UAT            : strict, production-like (stub by OTAP).
-  - DLP-PP-PROD           : strict, mirrors tenant base (stub by OTAP).
+  - DLP-AI-DEV            : permissive, allows developer connectors (stub by OTAP).
+  - DLP-AI-TEST           : standard, same as tenant base (stub by OTAP).
+  - DLP-AI-UAT            : strict, production-like (stub by OTAP).
+  - DLP-AI-PROD           : strict, mirrors tenant base (stub by OTAP).
 
 Review all connector lists before running in production.
 
@@ -28,7 +28,7 @@ Provision-PowerPlatform-OTAP.ps1   →  run FIRST
 Provision-Powerplatform-DLP.ps1    →  run SECOND
   ✅ All connector classification (Business / NonBusiness / Blocked)
   ✅ DLP-Default-Strict (created + classified here)
-  ✅ DLP-Tenant-Base, DLP-PP-DEV/TEST/UAT/PROD (classified here)
+  ✅ DLP-Tenant-Base, DLP-AI-DEV/TEST/UAT/PROD (classified here)
 
 #>
 
@@ -396,36 +396,36 @@ $currentEnvs = Get-AdminPowerAppEnvironment
 
 $otapPolicies = @(
     @{
-        PolicyName     = 'DLP-PP-DEV'
+        PolicyName     = 'DLP-AI-DEV'
         Label          = 'DEV  (Permissive)'
-        EnvDisplayName = 'Power Platform Dev'
+        EnvDisplayName = 'AI Agents Dev'
         Business       = $coreBusinessConnectors + $devOnlyConnectors
         NonBusiness    = @()
         Blocked        = $blockedConnectors
         DefaultGroup   = 'nonBusinessDataGroup'   # Unlisted connectors are Non-Business in DEV
     },
     @{
-        PolicyName     = 'DLP-PP-TEST'
+        PolicyName     = 'DLP-AI-TEST'
         Label          = 'TEST (Standard)'
-        EnvDisplayName = 'Power Platform Test'
+        EnvDisplayName = 'AI Agents Test'
         Business       = $coreBusinessConnectors
         NonBusiness    = @()
         Blocked        = $blockedConnectors
         DefaultGroup   = 'blockedGroup'            # All third-party connectors blocked
     },
     @{
-        PolicyName     = 'DLP-PP-UAT'
+        PolicyName     = 'DLP-AI-UAT'
         Label          = 'UAT  (Strict)'
-        EnvDisplayName = 'Power Platform UAT'
+        EnvDisplayName = 'AI Agents UAT'
         Business       = $coreBusinessConnectors
         NonBusiness    = @()
         Blocked        = $blockedConnectors
         DefaultGroup   = 'blockedGroup'            # All third-party connectors blocked
     },
     @{
-        PolicyName     = 'DLP-PP-PROD'
+        PolicyName     = 'DLP-AI-PROD'
         Label          = 'PROD (Strict)'
-        EnvDisplayName = 'Power Platform Prod'
+        EnvDisplayName = 'AI Agents Prod'
         Business       = $coreBusinessConnectors
         NonBusiness    = @()
         Blocked        = $blockedConnectors

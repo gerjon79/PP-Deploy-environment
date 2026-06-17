@@ -53,13 +53,13 @@ The OTAP provisioning script creates a three-tier set of Power Platform environm
 
 | Name    | Display name        | Type       | Managed Env | Solution Checker | Backup retention | Purpose                              | Solutions model             |
 |---------|---------------------|------------|-------------|------------------|------------------|--------------------------------------|-----------------------------|
-| PP-DEV  | Power Platform Dev  | Sandbox    | No          | Off              | 7 days (default) | Development                          | Unmanaged solutions (build) |
-| PP-TEST | Power Platform Test | Sandbox    | Yes         | Warn             | 7 days (default) | Test + User Acceptance Testing       | Managed solutions           |
-| PP-PROD | Power Platform Prod | Production | Yes         | Block            | 28 days          | Production workloads                 | Managed only (no unmanaged) |
+| AI-DEV  | AI Agents Dev  | Sandbox    | No          | Off              | 7 days (default) | Development                          | Unmanaged solutions (build) |
+| AI-TEST | AI Agents Test | Sandbox    | Yes         | Warn             | 7 days (default) | Test + User Acceptance Testing       | Managed solutions           |
+| AI-PROD | AI Agents Prod | Production | Yes         | Block            | 28 days          | Production workloads                 | Managed only (no unmanaged) |
 
-> **Test + UAT combined:** Microsoft's ALM guidance allows combining Test and UAT into a single stage for most organisations. If your compliance requirements mandate a separate UAT sign-off environment, duplicate the `PP-TEST` entry in `$envDefinitions` and adjust accordingly.
+> **Test + UAT combined:** Microsoft's ALM guidance allows combining Test and UAT into a single stage for most organisations. If your compliance requirements mandate a separate UAT sign-off environment, duplicate the `AI-TEST` entry in `$envDefinitions` and adjust accordingly.
 
-> **Per-maker Dev environments:** For larger teams, Microsoft recommends provisioning one personal Dev environment per maker rather than a shared `PP-DEV`. Provision those individually or via Power Platform Pipelines. The shared `PP-DEV` environment is a pragmatic default for smaller teams.
+> **Per-maker Dev environments:** For larger teams, Microsoft recommends provisioning one personal Dev environment per maker rather than a shared `AI-DEV`. Provision those individually or via Power Platform Pipelines. The shared `AI-DEV` environment is a pragmatic default for smaller teams.
 
 All environments are provisioned with a Dataverse database. The script polls the environment state and only provisions Dataverse when the platform reports the environment as ready.
 
@@ -77,17 +77,17 @@ Managed Environments (enabled on Test and Prod) provide:
 
 | Environment | Level  | Behaviour                                                        |
 |-------------|--------|------------------------------------------------------------------|
-| PP-DEV      | None   | No enforcement; makers can import freely.                        |
-| PP-TEST     | Warn   | Checker runs on import; issues are flagged but import proceeds.  |
-| PP-PROD     | Block  | Import is blocked if the checker finds high-severity issues.     |
+| AI-DEV      | None   | No enforcement; makers can import freely.                        |
+| AI-TEST     | Warn   | Checker runs on import; issues are flagged but import proceeds.  |
+| AI-PROD     | Block  | Import is blocked if the checker finds high-severity issues.     |
 
 ### Backup retention
 
 | Environment | Retention  |
 |-------------|------------|
-| PP-DEV      | 7 days (platform default) |
-| PP-TEST     | 7 days (platform default) |
-| PP-PROD     | 28 days (maximum)         |
+| AI-DEV      | 7 days (platform default) |
+| AI-TEST     | 7 days (platform default) |
+| AI-PROD     | 28 days (maximum)         |
 
 ### Region / location
 
@@ -103,9 +103,9 @@ The `-Language` (default: `English`) and `-Currency` (default: `EUR`) parameters
 
 For each environment, the script creates an Entra ID security group and assigns it as **Environment Maker** on the corresponding environment.
 
-- PP-DEV  → `SG-PP-DEV-Makers`
-- PP-TEST → `SG-PP-TEST-Makers`
-- PP-PROD → `SG-PP-PROD-Makers`
+- AI-DEV  → `SG-AI-DEV-Makers`
+- AI-TEST → `SG-AI-TEST-Makers`
+- AI-PROD → `SG-AI-PROD-Makers`
 
 Grant maker access by adding users to these groups in Entra ID instead of assigning permissions directly in Power Platform.
 
@@ -131,9 +131,9 @@ This repository includes an opinionated baseline for Power Platform DLP policies
 |--------------------|-------------|----------------------------------------------------------------------|
 | DLP-Tenant-Base    | Tenant-wide | Global baseline; blocks high-risk consumer/third-party connectors.  |
 | DLP-Default-Strict | Default env | Microsoft 365 only; no Dataverse/Dynamics.                          |
-| DLP-PP-DEV         | PP-DEV      | Permissive; allows dev tooling (e.g. GitHub) in addition to base.  |
-| DLP-PP-TEST        | PP-TEST     | Standard; Microsoft 365 and Dataverse, no dev tooling.             |
-| DLP-PP-PROD        | PP-PROD     | Strict; Microsoft 365 and Dataverse only, all else blocked.        |
+| DLP-AI-DEV         | AI-DEV      | Permissive; allows dev tooling (e.g. GitHub) in addition to base.  |
+| DLP-AI-TEST        | AI-TEST     | Standard; Microsoft 365 and Dataverse, no dev tooling.             |
+| DLP-AI-PROD        | AI-PROD     | Strict; Microsoft 365 and Dataverse only, all else blocked.        |
 
 ### Connector classification model
 
@@ -144,7 +144,7 @@ This repository includes an opinionated baseline for Power Platform DLP policies
 Unlisted connectors default to:
 
 - `DLP-Tenant-Base`, TEST, PROD: `blockedGroup` — all unlisted connectors are blocked, including future connectors.
-- `DLP-PP-DEV`: `nonBusinessDataGroup` — unlisted connectors allowed for non-business data only.
+- `DLP-AI-DEV`: `nonBusinessDataGroup` — unlisted connectors allowed for non-business data only.
 
 ### How the DLP script works
 

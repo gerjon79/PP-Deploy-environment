@@ -18,13 +18,13 @@ This script uses the Microsoft.PowerApps.Administration.PowerShell module to:
   Run that script AFTER this one to apply Business/NonBusiness/Blocked rules.
 
 Environment topology (aligns with Microsoft ALM guidance):
-  PP-DEV   — Sandbox. Unmanaged solutions. Shared dev environment.
+  AI-DEV   — Sandbox. Unmanaged solutions. Shared dev environment.
              NOTE: For larger teams Microsoft recommends one personal Dev environment
              per maker. Provision those individually or via Power Platform Pipelines.
-  PP-TEST  — Sandbox + Managed Environment. Managed solutions. Combined Test + UAT
+  AI-TEST  — Sandbox + Managed Environment. Managed solutions. Combined Test + UAT
              stage (sufficient for most organisations; split if compliance requires
              a separate UAT sign-off environment).
-  PP-PROD  — Production + Managed Environment. Managed solutions only.
+  AI-PROD  — Production + Managed Environment. Managed solutions only.
              28-day backup retention. Solution Checker set to Block.
 
 Tenant isolation (section 5):
@@ -59,7 +59,7 @@ Provision-PowerPlatform-OTAP.ps1   →  run FIRST
 Provision-Powerplatform-DLP.ps1    →  run SECOND
   ✅ All connector classification (Business / NonBusiness / Blocked)
   ✅ DLP-Default-Strict (created + classified here)
-  ✅ DLP-Tenant-Base, DLP-PP-DEV/TEST/PROD (classified here)
+  ✅ DLP-Tenant-Base, DLP-AI-DEV/TEST/PROD (classified here)
 
 #>
 
@@ -226,34 +226,34 @@ if (-not $DryRun) {
 # ---------------------------------------------------------------------------
 $envDefinitions = @(
     @{
-        Name                = 'PP-DEV'
-        DisplayName         = 'Power Platform Dev'
+        Name                = 'AI-DEV'
+        DisplayName         = 'AI Agents Dev'
         Type                = 'Sandbox'
         Purpose             = 'Development (unmanaged solutions)'
         ManagedEnvironment  = $false
         SolutionChecker     = 'None'
         BackupRetentionDays = $null
-        SecurityGroupName   = 'SG-PP-DEV-Makers'
+        SecurityGroupName   = 'SG-AI-DEV-Makers'
     },
     @{
-        Name                = 'PP-TEST'
-        DisplayName         = 'Power Platform Test'
+        Name                = 'AI-TEST'
+        DisplayName         = 'AI Agents Test'
         Type                = 'Sandbox'
         Purpose             = 'Test and User Acceptance Testing (managed solutions)'
         ManagedEnvironment  = $true
         SolutionChecker     = 'Warn'
         BackupRetentionDays = $null
-        SecurityGroupName   = 'SG-PP-TEST-Makers'
+        SecurityGroupName   = 'SG-AI-TEST-Makers'
     },
     @{
-        Name                = 'PP-PROD'
-        DisplayName         = 'Power Platform Prod'
+        Name                = 'AI-PROD'
+        DisplayName         = 'AI Agents Prod'
         Type                = 'Production'
         Purpose             = 'Production (managed solutions only)'
         ManagedEnvironment  = $true
         SolutionChecker     = 'Block'
         BackupRetentionDays = 28
-        SecurityGroupName   = 'SG-PP-PROD-Makers'
+        SecurityGroupName   = 'SG-AI-PROD-Makers'
     }
 )
 
@@ -442,7 +442,7 @@ foreach ($env in $envDefinitions) {
 
 # ---------------------------------------------------------------------------
 # 11. Create Azure AD security groups and assign them to their environments
-#    One group per environment: SG-PP-DEV-Makers, SG-PP-TEST-Makers, etc.
+#    One group per environment: SG-AI-DEV-Makers, SG-AI-TEST-Makers, etc.
 #    Add people to these groups in Entra ID to grant environment access.
 # ---------------------------------------------------------------------------
 Write-Host "Ensuring Azure AD security groups exist and are assigned to environments..." -ForegroundColor Cyan
