@@ -192,7 +192,7 @@ if (-not $DryRun) {
                 }
             }
 
-            Set-PowerAppTenantIsolationPolicy -TenantId $TenantId -Policy $newPolicy -ErrorAction Stop | Out-Null
+            Set-PowerAppTenantIsolationPolicy -TenantId $TenantId -TenantIsolationPolicy $newPolicy -ErrorAction Stop | Out-Null
             Write-Host "  Tenant isolation enabled. Cross-tenant connections are now blocked." -ForegroundColor Green
 
             if ($allowedTenantIds.Count -gt 0) {
