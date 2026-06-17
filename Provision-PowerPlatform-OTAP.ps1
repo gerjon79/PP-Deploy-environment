@@ -134,7 +134,7 @@ if ($ApplicationId -and $ClientSecret) {
 }
 
 # ---------------------------------------------------------------------------
-# 3. Authenticate to Microsoft Graph (for security group management)
+# 3. Authenticate to Microsoft Graph (reuse the Power Platform login token)
 # ---------------------------------------------------------------------------
 Write-Host "Authenticating to Microsoft Graph..." -ForegroundColor Cyan
 
@@ -143,8 +143,10 @@ if ($ApplicationId -and $ClientSecret) {
     $spCredential  = New-Object System.Management.Automation.PSCredential($ApplicationId, $secureSecret)
     Connect-MgGraph -TenantId $TenantId -ClientSecretCredential $spCredential -NoWelcome | Out-Null
 } else {
-    # Interactive: requires Group.ReadWrite.All consent.
-    Connect-MgGraph -TenantId $TenantId -Scopes "Group.ReadWrite.All" -NoWelcome | Out-Null
+    # Reuse the token from the Power Platform login so the user is not
+    # prompted to sign in a second time.
+    $graphToken = Get-JwtToken -Audience 'https://graph.microsoft.com/'
+    Connect-MgGraph -AccessToken ($graphToken | ConvertTo-SecureString -AsPlainText -Force) -NoWelcome | Out-Null
 }
 
 # ---------------------------------------------------------------------------
@@ -517,7 +519,7 @@ foreach ($env in $envDefinitions) {
         Write-Host "Assigning '$groupName' as EnvironmentMaker on '$($env.DisplayName)'..." -ForegroundColor Green
         if (-not $DryRun) {
             try {
-                $token   = Get-JwtToken -Audience 'https://management.azure.com/'
+                $token   = Get-JwtToken -Audience 'https://service.powerapps.com/'
                 $headers = @{
                     'Authorization' = "Bearer $token"
                     'Content-Type'  = 'application/json'
