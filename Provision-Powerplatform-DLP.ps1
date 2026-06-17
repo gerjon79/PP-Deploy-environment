@@ -118,7 +118,8 @@ function Get-OrCreateDlpPolicy {
     )
 
     # Use the shared cache; trim and case-insensitive match to avoid false misses.
-    $policy = $script:dlpPolicyCache | Where-Object { $_.DisplayName.Trim() -ieq $DisplayName.Trim() }
+    # Guard against entries returned by Get-DlpPolicy that have a null DisplayName.
+    $policy = $script:dlpPolicyCache | Where-Object { $_.DisplayName -and $_.DisplayName.Trim() -ieq $DisplayName.Trim() }
     if ($policy) {
         Write-Host "  Policy '$DisplayName' already exists." -ForegroundColor Yellow
         return $policy
@@ -140,7 +141,7 @@ function Get-OrCreateDlpPolicy {
         $script:dlpPolicyCache = Get-DlpPolicy
 
         if ($EnvironmentName) {
-            $policyObj = $script:dlpPolicyCache | Where-Object { $_.DisplayName.Trim() -ieq $DisplayName.Trim() }
+            $policyObj = $script:dlpPolicyCache | Where-Object { $_.DisplayName -and $_.DisplayName.Trim() -ieq $DisplayName.Trim() }
             if ($policyObj) {
                 $upd = $policyObj.properties
                 $upd.environmentType = 'SingleEnvironment'
@@ -155,7 +156,7 @@ function Get-OrCreateDlpPolicy {
         return $null
     }
 
-    return $script:dlpPolicyCache | Where-Object { $_.DisplayName.Trim() -ieq $DisplayName.Trim() }
+    return $script:dlpPolicyCache | Where-Object { $_.DisplayName -and $_.DisplayName.Trim() -ieq $DisplayName.Trim() }
 }
 
 function Set-PolicyConnectorGroups {
@@ -172,7 +173,7 @@ function Set-PolicyConnectorGroups {
         [string]   $DefaultGroup = 'nonBusinessDataGroup'
     )
 
-    $policy = $script:dlpPolicyCache | Where-Object { $_.DisplayName.Trim() -ieq $PolicyDisplayName.Trim() }
+    $policy = $script:dlpPolicyCache | Where-Object { $_.DisplayName -and $_.DisplayName.Trim() -ieq $PolicyDisplayName.Trim() }
     if (-not $policy) {
         Write-Warning "Policy '$PolicyDisplayName' not found. Skipping classification."
         return
