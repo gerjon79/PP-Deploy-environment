@@ -519,30 +519,18 @@ foreach ($env in $envDefinitions) {
         Write-Host "Assigning '$groupName' as EnvironmentMaker on '$($env.DisplayName)'..." -ForegroundColor Green
         if (-not $DryRun) {
             try {
-                $token   = Get-JwtToken -Audience 'https://service.powerapps.com/'
-                $headers = @{
-                    'Authorization' = "Bearer $token"
-                    'Content-Type'  = 'application/json'
-                }
-                $body = @{
-                    add = @(
-                        @{
-                            roleDefinitionId = "/providers/Microsoft.BusinessAppPlatform/environments/$($envObj.EnvironmentName)/roleDefinitions/environmentmaker"
-                            objectId         = $groupId
-                            principalType    = 'Group'
-                            tenantId         = $TenantId
-                        }
-                    )
-                } | ConvertTo-Json -Depth 5
-
-                $uri = "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments/$($envObj.EnvironmentName)/modifyRoleAssignments?api-version=2016-11-01"
-                Invoke-RestMethod -Uri $uri -Method POST -Headers $headers -Body $body | Out-Null
+                Set-AdminPowerAppEnvironmentRoleAssignment `
+                    -EnvironmentName    $envObj.EnvironmentName `
+                    -RoleName           'EnvironmentMaker' `
+                    -PrincipalType      'Group' `
+                    -PrincipalObjectId  $groupId `
+                    -ErrorAction Stop | Out-Null
                 Write-Host "  Assigned '$groupName' as EnvironmentMaker on '$($env.DisplayName)'." -ForegroundColor Green
             } catch {
                 Write-Warning "Failed to assign group '$groupName' to environment '$($env.DisplayName)': $_"
             }
         } else {
-            Write-Host "[DryRun] POST modifyRoleAssignments: $groupName -> EnvironmentMaker on $($envObj.EnvironmentName)" -ForegroundColor Gray
+            Write-Host "[DryRun] Set-AdminPowerAppEnvironmentRoleAssignment -EnvironmentName $($envObj.EnvironmentName) -RoleName EnvironmentMaker -PrincipalType Group -PrincipalObjectId $groupId" -ForegroundColor Gray
         }
     }
 }
