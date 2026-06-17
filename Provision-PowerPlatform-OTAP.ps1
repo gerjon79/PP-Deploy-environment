@@ -395,41 +395,27 @@ foreach ($env in $envDefinitions) {
         continue
     }
 
-    # --- Managed Environments ---
+    # --- Managed Environments + Solution Checker (single cmdlet call) ---
     if ($env.ManagedEnvironment) {
-        Write-Host "Enabling Managed Environment on '$($env.DisplayName)'..." -ForegroundColor Green
+        Write-Host "Enabling Managed Environment on '$($env.DisplayName)' (Solution Checker: $($env.SolutionChecker))..." -ForegroundColor Green
         if (-not $DryRun) {
             try {
-                # GovernanceConfiguration protectionLevel 'Standard' activates
-                # the Managed Environments tier.
-                Set-AdminPowerAppEnvironment `
-                    -EnvironmentName       $envObj.EnvironmentName `
-                    -GovernanceConfiguration @{ protectionLevel = 'Standard' } `
+                # protectionLevel 'Standard' activates the Managed Environments tier.
+                # solutionCheckerMode controls enforcement on solution import.
+                $govConfig = [PSCustomObject]@{
+                    protectionLevel     = 'Standard'
+                    solutionCheckerMode = $env.SolutionChecker.ToLower()  # 'none' | 'warn' | 'block'
+                }
+                Set-AdminPowerAppEnvironmentGovernanceConfiguration `
+                    -EnvironmentName              $envObj.EnvironmentName `
+                    -UpdatedGovernanceConfiguration $govConfig `
                     -ErrorAction Stop | Out-Null
-                Write-Host "  Managed Environment enabled on '$($env.DisplayName)'." -ForegroundColor Green
+                Write-Host "  Managed Environment enabled (Solution Checker: $($env.SolutionChecker)) on '$($env.DisplayName)'." -ForegroundColor Green
             } catch {
                 Write-Warning "Failed to enable Managed Environment on '$($env.DisplayName)': $_"
             }
         } else {
-            Write-Host "[DryRun] Set-AdminPowerAppEnvironment -EnvironmentName $($envObj.EnvironmentName) -GovernanceConfiguration @{protectionLevel='Standard'}" -ForegroundColor Gray
-        }
-    }
-
-    # --- Solution Checker enforcement ---
-    if ($env.SolutionChecker -ne 'None') {
-        Write-Host "Setting Solution Checker to '$($env.SolutionChecker)' on '$($env.DisplayName)'..." -ForegroundColor Green
-        if (-not $DryRun) {
-            try {
-                Set-AdminPowerAppEnvironment `
-                    -EnvironmentName          $envObj.EnvironmentName `
-                    -SolutionCheckerEnforcementLevel $env.SolutionChecker `
-                    -ErrorAction Stop | Out-Null
-                Write-Host "  Solution Checker set to '$($env.SolutionChecker)' on '$($env.DisplayName)'." -ForegroundColor Green
-            } catch {
-                Write-Warning "Failed to set Solution Checker on '$($env.DisplayName)': $_"
-            }
-        } else {
-            Write-Host "[DryRun] Set-AdminPowerAppEnvironment -EnvironmentName $($envObj.EnvironmentName) -SolutionCheckerEnforcementLevel '$($env.SolutionChecker)'" -ForegroundColor Gray
+            Write-Host "[DryRun] Set-AdminPowerAppEnvironmentGovernanceConfiguration -EnvironmentName $($envObj.EnvironmentName) -UpdatedGovernanceConfiguration @{protectionLevel='Standard'; solutionCheckerMode='$($env.SolutionChecker.ToLower())'}" -ForegroundColor Gray
         }
     }
 
@@ -439,15 +425,15 @@ foreach ($env in $envDefinitions) {
         if (-not $DryRun) {
             try {
                 Set-AdminPowerAppEnvironmentBackupRetentionPeriod `
-                    -EnvironmentName           $envObj.EnvironmentName `
-                    -BackupRetentionPeriodInDays $env.BackupRetentionDays `
+                    -EnvironmentName              $envObj.EnvironmentName `
+                    -NewBackupRetentionPeriodInDays $env.BackupRetentionDays `
                     -ErrorAction Stop | Out-Null
                 Write-Host "  Backup retention set to $($env.BackupRetentionDays) days on '$($env.DisplayName)'." -ForegroundColor Green
             } catch {
                 Write-Warning "Failed to set backup retention on '$($env.DisplayName)': $_"
             }
         } else {
-            Write-Host "[DryRun] Set-AdminPowerAppEnvironmentBackupRetentionPeriod -EnvironmentName $($envObj.EnvironmentName) -BackupRetentionPeriodInDays $($env.BackupRetentionDays)" -ForegroundColor Gray
+            Write-Host "[DryRun] Set-AdminPowerAppEnvironmentBackupRetentionPeriod -EnvironmentName $($envObj.EnvironmentName) -NewBackupRetentionPeriodInDays $($env.BackupRetentionDays)" -ForegroundColor Gray
         }
     }
 }
@@ -531,7 +517,7 @@ foreach ($env in $envDefinitions) {
         Write-Host "Assigning '$groupName' as EnvironmentMaker on '$($env.DisplayName)'..." -ForegroundColor Green
         if (-not $DryRun) {
             try {
-                $token   = $global:currentSession.accessToken
+                $token   = Get-JwtToken -Audience 'https://management.azure.com/'
                 $headers = @{
                     'Authorization' = "Bearer $token"
                     'Content-Type'  = 'application/json'
@@ -576,7 +562,7 @@ $dlpPolicyCache = Get-DlpPolicy
 
 function Find-DlpPolicyInCache {
     param([string] $Name)
-    return $dlpPolicyCache | Where-Object { $_.DisplayName.Trim() -ieq $Name.Trim() }
+    return $dlpPolicyCache | Where-Object { $_.DisplayName -and $_.DisplayName.Trim() -ieq $Name.Trim() }
 }
 
 # Tenant-wide base policy stub
