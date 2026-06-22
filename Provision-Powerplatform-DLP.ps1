@@ -384,7 +384,7 @@ if (-not $defaultEnv) {
 # 5. OTAP per-environment DLP policies — classify only (stubs by OTAP script)
 #
 #    Strictness ladder:
-#      DEV  (Permissive) : core M365 + Dataverse + developer connectors
+#      DEV  (Standard)   : core M365 + Dataverse + developer connectors, all else blocked
 #      TEST (Standard)   : core M365 + Dataverse, no dev tools
 #      UAT  (Strict)     : core M365 + Dataverse, mirrors Prod
 #      PROD (Strict)     : core M365 + Dataverse only, most locked down
@@ -402,7 +402,7 @@ $otapPolicies = @(
         Business       = $coreBusinessConnectors + $devOnlyConnectors
         NonBusiness    = @()
         Blocked        = $blockedConnectors
-        DefaultGroup   = 'nonBusinessDataGroup'   # Unlisted connectors are Non-Business in DEV
+        DefaultGroup   = 'blockedGroup'            # All unlisted connectors are blocked
     },
     @{
         PolicyName     = 'DLP-AI-TEST'
